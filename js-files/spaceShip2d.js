@@ -13,7 +13,7 @@ let renderer, scene, camera;
 let ctrl;
 let gui;
 
-let uralommas, gyuru, spaceShip, asteroid, planet;
+let spaceStation, ring, spaceShip, asteroid, planet;
 let dLight, sLight, sunLight;
 let cameraPos;
 
@@ -70,24 +70,20 @@ function loader(){
             } );
             init();
         },
-        // Betöltés előrehaladása közben hívódik
         function ( xhr ) {
             console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
         },
-        // Hibás betöltés esetén
         function ( error ) {
             console.log( 'An error happened!', error.currentTarget.statusText, error.currentTarget.responseURL );
         });
 
 }
 
-function init() {
-    // Böngésző ablakméret lekérése és méretarány számítása
+function init(){
     HEIGHT = window.innerHeight;
     WIDTH = window.innerWidth;
     aspectRatio = WIDTH / HEIGHT;
 
-    // Renderer létrehozása és DOM-hoz adása
     renderer = new THREE.WebGLRenderer( { antialias: true } );
     renderer.setSize( WIDTH, HEIGHT );
     renderer.shadowMap.enabled = true;
@@ -95,54 +91,53 @@ function init() {
     document.body.appendChild( renderer.domElement );
 
     scene = new THREE.Scene();
-
-    // Kamera létrehozása és vetítési paramétereinek beállítása
     camera = new THREE.PerspectiveCamera( 75, aspectRatio, 0.1, 1000 );
-    // camera.position.set( 0, 10, 200 );
-    // camera.lookAt( scene.position );
+
+    // Materials
+    let whiteMaterial = new THREE.MeshPhongMaterial( { color: 0xefffff } );
+    let redMaterial = new THREE.MeshPhongMaterial( { color: 0xeff0000 } );
+    let grayMaterial = new THREE.MeshPhongMaterial( { color: 0xB2BEB5, side: THREE.DoubleSide} );
+    let stoneMaterial = new THREE.MeshPhongMaterial( { color: 0x333333} );
 
     /*
     * Create Objects
     * */
-    /*
-      Space Station
-     */
-    let a = 4; // alap oldal hossz - viszonyítási alap
-    let cylMesh3Height = a*2;
-    let whiteMaterial = new THREE.MeshPhongMaterial( { color: 0xefffff } );
-    let redMaterial = new THREE.MeshPhongMaterial( { color: 0xeff0000 } );
-    let grayMaterial = new THREE.MeshPhongMaterial( { color: 0xB2BEB5, side: THREE.DoubleSide} );
-    let cylGeometry2 = new THREE.CylinderGeometry(a/2, a/2, cylMesh3Height, 16, 1, false, 0, 2*Math.PI);
-    uralommas = new THREE.Mesh( cylGeometry2, redMaterial );
-    uralommas.rotation.z = Math.PI / 2;
-    uralommas.rotation.x = Math.PI / 4;
-    uralommas.castShadow = true;
-    uralommas.receiveShadow = true;
-    let tav = (a*14)
-    uralommas.position.set(-tav,tav, -tav);
-    scene.add( uralommas );
 
+
+    //  Space Station
+    //
+    let a = 4; // standard size
+    let cylMesh3Height = a*2;
+    let cylGeometry2 = new THREE.CylinderGeometry(a/2, a/2, cylMesh3Height, 16, 1, false, 0, 2*Math.PI);
+    spaceStation = new THREE.Mesh( cylGeometry2, redMaterial );
+    spaceStation.rotation.z = Math.PI / 2;
+    spaceStation.rotation.x = Math.PI / 4;
+    spaceStation.castShadow = true;
+    spaceStation.receiveShadow = true;
+    let tav = (a*14)
+    spaceStation.position.set(-tav,tav, -tav);
+    scene.add( spaceStation );
     // Body of space station
     let cylMesh4 = new THREE.Mesh( cylGeometry2, redMaterial );
     cylMesh4.rotation.x = Math.PI / 2;
     cylMesh4.position.set(0, 0 , cylMesh3Height/2);
-    uralommas.add( cylMesh4 );
+    spaceStation.add( cylMesh4 );
     // Cube
     let boxMeshHeight = a*3.5;
     let boxGeometry = new THREE.BoxGeometry( a*1.3, a*1.5, boxMeshHeight );
     let boxMesh = new THREE.Mesh( boxGeometry, redMaterial );
     boxMesh.position.z = (cylMesh3Height + boxMeshHeight/2);
-    uralommas.add( boxMesh );
-    // Nagy Henger
+    spaceStation.add( boxMesh );
+    // sides of the space station
     let cylMeshHeight = a*6;
     let cylMeshWidth = a;
     let cylGeometry = new THREE.CylinderGeometry(cylMeshWidth, cylMeshWidth, cylMeshHeight, 32, 1, false, 0, 2*Math.PI);
     let cylMesh = new THREE.Mesh( cylGeometry, whiteMaterial );
     cylMesh.position.set(0, -(cylMesh3Height/2 + cylMeshHeight/2) , 0);
-    uralommas.add( cylMesh );
+    spaceStation.add( cylMesh );
     let cylMesh2 = new THREE.Mesh( cylGeometry, whiteMaterial );
     cylMesh2.position.set(0, (cylMesh3Height/2 + cylMeshHeight/2), 0);
-    uralommas.add( cylMesh2 );
+    spaceStation.add( cylMesh2 );
     // end of space station's sides
     let csucsGeometry = new THREE.CylinderGeometry(cylMeshWidth, cylMeshWidth/1.5, cylMeshHeight/7, 32, 1, false, 0, 2*Math.PI);
     let csucsMesh = new THREE.Mesh( csucsGeometry, whiteMaterial );
@@ -150,10 +145,9 @@ function init() {
     csucsMesh.position.set(0, -(cylMesh3Height/2 + cylMeshHeight*7.5/7) , 0);
     csucsMesh2.position.set(0, (cylMesh3Height/2 + cylMeshHeight*7.5/7), 0);
     csucsMesh2.rotation.x = Math.PI;
-
-    uralommas.add( csucsMesh );
-    uralommas.add( csucsMesh2 );
-    // Solar panels
+    spaceStation.add( csucsMesh );
+    spaceStation.add( csucsMesh2 );
+    //  Solar panels
     let planeHeight = a * 8;
     let planeWidth = a * 2;
     let planeGeometry = new THREE.PlaneGeometry( planeWidth, planeHeight, 4, 4 );
@@ -189,20 +183,17 @@ function init() {
     cylMesh2.add( planeMesh6 );
     cylMesh2.add( planeMesh7 );
     cylMesh2.add( planeMesh8 );
-    /*
-    Planet
-     */
+    //  Planet
     let sphereGeometry = new THREE.SphereGeometry( planetSizeOriginal, 30, 30 );
-    let stoneMaterial = new THREE.MeshPhongMaterial( { color: 0x333333} );
     let bolyoMaterial = new THREE.MeshPhongMaterial();
     bolyoMaterial.map = texture;
     planet = new THREE.Mesh( sphereGeometry, bolyoMaterial );
     planet.castShadow = true;
     planet.receiveShadow = true;
     scene.add( planet );
-    /*
-    Space-Ship
-     */
+
+    //  Space-Ship
+    //
     spaceShip.position.set( 0, -10, 150 );
     spaceShip.rotation.y += Math.PI / 2;
     spaceShip.receiveShadow = true;
@@ -212,13 +203,12 @@ function init() {
     spaceShip.add(cameraPos);
     cameraPos.position.set(0, a, 0);
     cameraPos.visible = false;
-    // camera.position.set(-10, 5, 0);
     camera.position.set(0, 60, 240);
     camera.lookAt( scene.position );
     scene.add(camera);
-    /*
-    Asteroid
-    */
+
+    //  Asteroid
+    //
     let gombRadius2 = a * 2;
     let sphereGeometry2 = new THREE.SphereGeometry( gombRadius2, 6, 6 );
     asteroid = new THREE.Mesh( sphereGeometry2, stoneMaterial );
@@ -227,39 +217,45 @@ function init() {
     asteroid.rotation.x = Math.PI / 2;
     asteroid.rotation.y = Math.PI / 6;
     scene.add( asteroid );
-    /*
-    Ring
-     */
+
+    //  Ring
+    //
     const gyuruGeometry = new THREE.TorusGeometry( 9*a, 3, 8, 40 );
     const gyuruMaterial = new THREE.MeshPhongMaterial( { color: 0x9A7B4F} );
     gyuruMaterial.transparent = true;
     gyuruMaterial.opacity = 0.6;
-    gyuru = new THREE.Mesh( gyuruGeometry, gyuruMaterial );
-    gyuru.rotation.x = Math.PI / 2;
-    gyuru.rotation.y = Math.PI / 6;
-    gyuru.castShadow = true;
-    gyuru.receiveShadow = true;
-    scene.add( gyuru );
+    ring = new THREE.Mesh( gyuruGeometry, gyuruMaterial );
+    ring.rotation.x = Math.PI / 2;
+    ring.rotation.y = Math.PI / 6;
+    ring.castShadow = true;
+    ring.receiveShadow = true;
+    scene.add( ring );
 
     /*
     * Lights
     * */
-    // ambiens fény
+
+    //  ambient light
+    //
     let ambient = new THREE.AmbientLight( 0xffffff, 0.2 );
     scene.add( ambient );
-    //irányított fény
+
+    //  ~ sunlight
+    //
     dLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
     dLight.position.set(  0,8*a, 0);
-    dLight.target = gyuru;
+    dLight.target = ring;
     scene.add( dLight )
-    // űrállomás fénye - reflektor fény
+
+    //  spotlight of the space station
+    //
     sLight = new THREE.SpotLight( 0xff5f5f, 10, 45*a, Math.PI / 12, 0.2 );
     sLight.target = planet;
     sLight.castShadow = true;
     cylMesh4.add( sLight );
-    // let sLightHelper = new THREE.SpotLightHelper(sLight, 0x0000ff);
-    // sLight.add(sLightHelper);
-    // pontfény
+
+    //  blue pointlight
+    //
     sunLight = new THREE.PointLight(0x005f5f , 0.8, a*45);
     sunLight.position.set(  16 * a, 6 * a, 0);
     sunLight.castShadow = true;
@@ -270,23 +266,16 @@ function init() {
     let pointLightHelper = new THREE.PointLightHelper(sunLight, a*2, 0x005f5f);
     scene.add(pointLightHelper);
 
-    // Az ablak későbbi átméretezése esetén visszahívható függvény megadása
+
+
     window.addEventListener( 'resize', handleWindowResize, false );
     window.addEventListener( 'keydown', handleKeyDown );
-
-    // Kamera vezérlés
-    // controls = new TrackballControls( camera, renderer.domElement );
-    // controls.rotateSpeed = 5.0;
-    // controls.panSpeed = 1.0;
-    // Paraméter panel
     ctrl = new controller();
     addControlGui( ctrl );
-
     animate();
 }
 
 function handleWindowResize() {
-    // Az ablak átméretezése esetén a kamera vetítési paraméterek újraszámolása
     HEIGHT = window.innerHeight;
     WIDTH = window.innerWidth;
     console.log( 'WIDTH=' + WIDTH + '; HEIGHT=' + HEIGHT );
@@ -299,30 +288,26 @@ function handleWindowResize() {
 }
 
 let rotation =  Math.PI / 720;
-function animate() {
-    // Újabb képkocka rajzolásának kérése.
-    // Maximálisan 60 FPS-t biztosít a rendszer.
+function animate(){
     requestAnimationFrame( animate );
-    // Kameramozgás vezérlése
-    // clock.getDelta()
-    // controls.update(clock.getDelta());
 
-    toBackMove(uralommas);
-    planet.rotation.y += rotation/3;
-    gyuru.rotation.x += rotation*2;
+
+    toBackMove(spaceStation);
+
     asteroid.rotation.x += rotation*8;
     asteroid.rotation.y += rotation*4;
-
     asteroid.position.x = ctrl.positionSpaceRock;
+
     planet.scale.set(ctrl.newSize,ctrl.newSize, ctrl.newSize);
-    gyuru.scale.set(ctrl.newSize,ctrl.newSize, ctrl.newSize);
-    // Új képkocka rajzolása
+    planet.rotation.y += rotation/3;
+
+    ring.scale.set(ctrl.newSize,ctrl.newSize, ctrl.newSize);
+    ring.rotation.x += rotation*2;
+
     render();
 }
 
 function render() {
-    // 3D -> 2D vetített kép kiszámítása.
-    // scene 3D színtér képe a camera kamera szemszögéből.
     renderer.render( scene, camera );
 }
 
@@ -388,14 +373,8 @@ function handleKeyDown( event ) {
 
     if( event.keyCode === "8".charCodeAt( 0 ) || event.keyCode === 104)  {
         spaceShip.position.y += 4;
-        // spaceShip.rotation.x += Math.cos(spaceShip.rotation.y - Math.PI/2) * Math.PI / 32;
-        // spaceShip.rotation.z -= Math.sin(spaceShip.rotation.y - Math.PI/2) * Math.PI / 32;
-        // document.getElementById( 'xr' ).innerHTML = 'x: ' + spaceShip.rotation.x;
     }
     if( event.keyCode === "2".charCodeAt( 0 ) || event.keyCode === 98)  {
         spaceShip.position.y -= 4;
-        // spaceShip.rotation.x -= Math.cos(spaceShip.rotation.y - Math.PI/2) * Math.PI / 32;
-        // spaceShip.rotation.z += Math.sin(spaceShip.rotation.y - Math.PI/2) * Math.PI / 32;
-        // document.getElementById( 'xr' ).innerHTML =  'x: ' + spaceShip.rotation.x;
     }
 }
